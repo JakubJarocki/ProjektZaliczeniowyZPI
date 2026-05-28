@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trening — MeetFit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg" id="app-navbar"></nav>
+
+  <div class="container" style="padding:2rem 1rem 4rem;">
+    <a href="/calendar" style="color:var(--text-muted);font-size:0.88rem;">← Kalendarz</a>
+    <div id="content" style="margin-top:1rem;">
+      <div class="loading-state"><div class="spinner-border"></div></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/app.js"></script>
+  <script>
+  const trainingId = location.pathname.split('/').pop();
+  let currentUser = null;
+  let trainingData = null;
+
+  async function load(){
+    try {
+      const [td, md] = await Promise.all([
+        api(`/api/trainings/${trainingId}`),
+        api('/api/me')
+      ]);
+      trainingData = td.training;
+      currentUser  = md.logged_in ? md.user : null;
+      render();
+      loadComments();
+    } catch(e){
+      document.getElementById('content').innerHTML = '<div class="alert alert-danger">Trening nie istnieje lub wystąpił błąd.</div>';
+    }
+  }
+
+  function render(){
+    const t = trainingData;
+    const isCreator = currentUser && currentUser.id === t.creator.id;
+    const isFull    = t.current_participants >= t.max_participants;
+    const pct       = Math.round((t.current_participants / t.max_participants)*100);
+
+    document.title = `${t.title} — MeetFit`;
+
+    document.getElementById('content').innerHTML = `
+      <div class="row g-4">
+        <!-- LEWA -->
+        <div class="col-lg-8">
+          <div class="card" style="margin-bottom:1.25rem;">
+            <div class="card-body">
+              <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+                ${typeBadge(t.training_type)} ${diffBadge(t.difficulty_level)}
+                ${isCreator ? '<span class="badge" style="background:rgba(0,200,150,0.15);color:var(--primary);">Twój trening</span>' : ''}
+              </div>
+              <h2 style="font-size:1.7rem;margin-bottom:0.4rem;">${escHtml(t.title)}</h2>
+              <p style="color:var(--text-muted);font-size:0.9rem;">Utworzono ${fmtDateTime(t.created_at)}</p>
+              ${t.description ? `<p style="color:var(--text-muted);margin-top:0.75rem;line-height:1.7;">${escHtml(t.description)}</p>` : ''}
+            </div>
+          </div>
+
+          <!-- KOMENTARZE -->
+          <div class="card">
+            <div class="card-body">
+              <h5 style="margin-bottom:1.25rem;">💬 Komentarze</h5>
+              <div id="comments-list" style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.25rem;"></div>
+              ${currentUser ? `
+                <div style="display:flex;gap:0.75rem;">
+                  ${avatar(currentUser)}
+                  <div style="flex:1;">
+                    <textarea class="form-control" id="comment-input" rows="2" placeholder="Napisz komentarz..." style="margin-bottom:0.5rem;"></textarea>
+                    <button class="btn btn-primary btn-sm" onclick="addComment()">Wyślij</button>
+                  </div>
+                </div>
+              ` : `<p style="color:var(--text-muted);font-size:0.9rem;"><a href="/login">Zaloguj się</a>, żeby komentować.</p>`}
+            </div>
+          </div>
+        </div>
+
+        <!-- PRAWA -->
+        <div class="col-lg-4">
+          <!-- Info -->
+          <div class="card" style="margin-bottom:1.25rem;">
+            <div class="card-body" style="display:flex;flex-direction:column;gap:0.85rem;">
+              <div>
+                <div style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Data i godzina</div>
+                <div style="font-weight:600;">${fmtDate(t.schedule.date)} · ${fmtTime(t.schedule.start_time)}${t.schedule.end_time ? ' – '+fmtTime(t.schedule.end_time) : ''}</div>
+              </div>
+              <div>
+                <div style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Lokalizacja</div>
+                <div style="font-weight:600;">${escHtml(t.location.gym_name)}</div>
+                ${t.location.gym_address ? `<div style="font-size:0.87rem;color:var(--text-muted);">${escHtml(t.location.gym_address)}</div>` : ''}
+                <div style="font-size:0.87rem;color:var(--text-muted);">📍 ${escHtml(t.location.city)}</div>
+              </div>
+              <div>
+                <div style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Uczestnicy (${t.current_participants}/${t.max_participants})</div>
+                <div class="participants-bar"><div class="participants-bar-fill" style="width:${pct}%"></div></div>
+                <div style="font-size:0.8rem;color:${isFull?'var(--accent)':'var(--primary)'};margin-top:0.3rem;">${isFull ? 'Brak miejsc' : `${t.max_participants - t.current_participants} wolnych miejsc`}</div>
+              </div>
+              <div>
+                <div style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Organizator</div>
+                <div style="display:flex;align-items:center;gap:0.6rem;">
+                  ${avatar(t.creator)}
+                  <div>
+                    <div style="font-weight:600;font-size:0.92rem;">${escHtml(t.creator.first_name+' '+t.creator.last_name)}</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">${LEVEL_LABELS[t.creator.experience_level]||''}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Akcje -->
+          <div id="action-card" class="card">
+            <div class="card-body" id="action-btns"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    renderActions();
+  }
+
+  function renderActions(){
+    const t = trainingData;
+    const isCreator = currentUser && currentUser.id === t.creator.id;
+    const isFull    = t.current_participants >= t.max_participants;
+    const el = document.getElementById('action-btns');
+    if(!currentUser){
+      el.innerHTML = `<p style="color:var(--text-muted);font-size:0.9rem;text-align:center;"><a href="/login">Zaloguj się</a>, żeby dołączyć do treningu.</p>`;
+    } else if(isCreator){
+      el.innerHTML = `
+        <p style="color:var(--primary);font-size:0.9rem;margin-bottom:1rem;">Jesteś organizatorem tego treningu.</p>
+        <button class="btn btn-danger w-100" onclick="deleteTraining()">🗑 Usuń trening</button>
+      `;
+    } else if(t.is_joined){
+      el.innerHTML = `
+        <div class="alert alert-success" style="margin-bottom:0.75rem;">✓ Jesteś zapisany na ten trening</div>
+        <button class="btn btn-outline-secondary w-100" onclick="leaveTraining()">Opuść trening</button>
+      `;
+    } else if(isFull){
+      el.innerHTML = `<div class="alert alert-warning">Trening jest pełny</div>`;
+    } else {
+      el.innerHTML = `<button class="btn btn-primary w-100 btn-lg" onclick="joinTraining()">Dołącz do treningu</button>`;
+    }
+  }
+
+  async function loadComments(){
+    try {
+      const d = await api(`/api/trainings/${trainingId}/comments`);
+      const el = document.getElementById('comments-list');
+      if(!d.comments.length){
+        el.innerHTML='<p style="color:var(--text-muted);font-size:0.9rem;">Brak komentarzy. Bądź pierwszy!</p>'; return;
+      }
+      el.innerHTML = d.comments.map(c=>`
+        <div class="comment">
+          ${avatar(c.author)}
+          <div class="comment-body">
+            <div style="display:flex;gap:0.5rem;align-items:baseline;">
+              <span class="comment-author">${escHtml(c.author.first_name+' '+c.author.last_name)}</span>
+              <span class="comment-time">${fmtDateTime(c.created_at)}</span>
+            </div>
+            <div class="comment-text">${escHtml(c.content)}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch(e){}
+  }
+
+  async function addComment(){
+    const input = document.getElementById('comment-input');
+    const content = input.value.trim();
+    if(!content) return;
+    try {
+      await api(`/api/trainings/${trainingId}/comments`, {method:'POST', body:JSON.stringify({training_id:trainingId, content})});
+      input.value='';
+      loadComments();
+    } catch(e){ showToast(e.message,'danger'); }
+  }
+
+  async function joinTraining(){
+    try {
+      await api(`/api/trainings/${trainingId}/join`, {method:'POST'});
+      showToast('Dołączono do treningu!');
+      const d = await api(`/api/trainings/${trainingId}`);
+      trainingData = d.training;
+      render(); loadComments();
+    } catch(e){ showToast(e.message,'danger'); }
+  }
+
+  async function leaveTraining(){
+    try {
+      await api(`/api/trainings/${trainingId}/join`, {method:'DELETE'});
+      showToast('Opuszczono trening','info');
+      const d = await api(`/api/trainings/${trainingId}`);
+      trainingData = d.training;
+      render(); loadComments();
+    } catch(e){ showToast(e.message,'danger'); }
+  }
+
+  async function deleteTraining(){
+    if(!confirm('Czy na pewno usunąć ten trening?')) return;
+    try {
+      await api(`/api/trainings/${trainingId}`, {method:'DELETE'});
+      showToast('Trening usunięty');
+      setTimeout(()=>window.location.href='/my-trainings', 800);
+    } catch(e){ showToast(e.message,'danger'); }
+  }
+
+  load();
+  </script>
+</body>
+</html>

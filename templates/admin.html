@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel admina — MeetFit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg" id="app-navbar"></nav>
+
+  <div class="container" style="padding:2rem 1rem 4rem;">
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h1>📊 Panel administratora</h1>
+      <button class="btn btn-outline-secondary btn-sm" onclick="loadStats()">↻ Odśwież</button>
+    </div>
+    <div id="content"><div class="loading-state"><div class="spinner-border"></div></div></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/app.js"></script>
+  <script>
+  Chart.defaults.color = '#8b949e';
+  Chart.defaults.borderColor = '#30363d';
+  const CHART_COLORS = ['#00c896','#4361ee','#ff5757','#f59e0b','#6f42c1','#0ea5e9'];
+
+  async function loadStats(){
+    document.getElementById('content').innerHTML='<div class="loading-state"><div class="spinner-border"></div></div>';
+    try {
+      const d = await api('/api/admin/stats');
+      render(d.stats);
+    } catch(e){
+      if(e.message.includes('401')||e.message.includes('Wymagane')){ window.location.href='/login'; return; }
+      document.getElementById('content').innerHTML=`<div class="alert alert-danger">${escHtml(e.message)}</div>`;
+    }
+  }
+
+  function render(s){
+    document.getElementById('content').innerHTML = `
+      <!-- Stats -->
+      <div class="row g-3 mb-4">
+        ${[
+          ['Użytkownicy',    s.total_users,         '👥'],
+          ['Treningi',       s.total_trainings,     '🏋️'],
+          ['Uczestnictwa',   s.total_participations,'✅'],
+          ['Komentarze',     s.total_comments,      '💬'],
+        ].map(([lbl,val,ico])=>`
+          <div class="col-6 col-md-3">
+            <div class="stat-card">
+              <div style="font-size:1.75rem;margin-bottom:0.5rem;">${ico}</div>
+              <div class="stat-value">${val}</div>
+              <div class="stat-label">${lbl}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Wykresy -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <div class="chart-box">
+            <h5>Typy treningów</h5>
+            <canvas id="chart-types" height="220"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="chart-box">
+            <h5>Top 5 miast</h5>
+            <canvas id="chart-cities" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wszyscy treningi -->
+      <div class="chart-box">
+        <h5>Wszystkie treningi</h5>
+        <div id="all-trainings-list"></div>
+      </div>
+    `;
+
+    // Wykres typów
+    new Chart(document.getElementById('chart-types'),{
+      type:'doughnut',
+      data:{
+        labels: Object.keys(s.by_type).map(k=>TYPE_LABELS[k]||k),
+        datasets:[{data:Object.values(s.by_type), backgroundColor:CHART_COLORS, borderWidth:0}]
+      },
+      options:{plugins:{legend:{position:'bottom'}}}
+    });
+
+    // Wykres miast
+    new Chart(document.getElementById('chart-cities'),{
+      type:'bar',
+      data:{
+        labels: s.top_cities.map(c=>c.city),
+        datasets:[{label:'Użytkownicy', data:s.top_cities.map(c=>c.count), backgroundColor:'#00c896', borderRadius:6}]
+      },
+      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{grid:{display:false}}}}
+    });
+
+    // Lista treningów
+    loadAllTrainings();
+  }
+
+  async function loadAllTrainings(){
+    try {
+      const d = await api('/api/trainings');
+      const el = document.getElementById('all-trainings-list');
+      if(!d.trainings.length){ el.innerHTML='<p style="color:var(--text-muted);">Brak treningów</p>'; return; }
+      el.innerHTML=`<div class="table-responsive"><table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+        <thead><tr style="border-bottom:1px solid var(--border);">${['Tytuł','Typ','Miasto','Data','Uczestnicy','Akcje'].map(h=>`<th style="padding:0.6rem 0.75rem;color:var(--text-muted);font-weight:600;text-align:left;">${h}</th>`).join('')}</tr></thead>
+        <tbody>${d.trainings.map(t=>`
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:0.6rem 0.75rem;"><a href="/training/${t.id}" style="color:var(--text);font-weight:500;">${escHtml(t.title)}</a></td>
+            <td style="padding:0.6rem 0.75rem;">${typeBadge(t.training_type)}</td>
+            <td style="padding:0.6rem 0.75rem;color:var(--text-muted);">${escHtml(t.location.city)}</td>
+            <td style="padding:0.6rem 0.75rem;color:var(--text-muted);">${fmtDate(t.schedule.date)}</td>
+            <td style="padding:0.6rem 0.75rem;color:var(--primary);">${t.current_participants}/${t.max_participants}</td>
+            <td style="padding:0.6rem 0.75rem;">
+              <button onclick="adminDelete('${t.id}')" style="background:rgba(255,87,87,0.1);color:var(--accent);border:none;border-radius:6px;padding:0.25rem 0.6rem;font-size:0.8rem;cursor:pointer;">Usuń</button>
+            </td>
+          </tr>
+        `).join('')}</tbody>
+      </table></div>`;
+    } catch(e){}
+  }
+
+  async function adminDelete(id){
+    if(!confirm('Usunąć trening?')) return;
+    try { await api(`/api/trainings/${id}`,{method:'DELETE'}); showToast('Usunięto'); loadStats(); }
+    catch(e){ showToast(e.message,'danger'); }
+  }
+
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    const d = await api('/api/me');
+    if(!d.logged_in){ window.location.href='/login'; return; }
+    if(d.user.user_type!=='admin'){ window.location.href='/'; return; }
+    loadStats();
+  });
+  </script>
+</body>
+</html>

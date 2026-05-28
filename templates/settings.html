@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ustawienia — MeetFit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg" id="app-navbar"></nav>
+
+  <div class="container" style="padding:2rem 1rem 4rem;max-width:680px;">
+    <div class="page-header">
+      <h1>⚙️ Ustawienia</h1>
+    </div>
+    <div id="content"><div class="loading-state"><div class="spinner-border"></div></div></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/app.js"></script>
+  <script>
+  let currentUser = null;
+
+  async function load(){
+    try {
+      const d = await api('/api/me');
+      if(!d.logged_in){ window.location.href='/login?next=/settings'; return; }
+      currentUser = d.user;
+      render();
+    } catch(e){ window.location.href='/login'; }
+  }
+
+  function render(){
+    const u = currentUser;
+    document.getElementById('content').innerHTML = `
+      <!-- Profil -->
+      <div class="settings-card">
+        <div style="display:flex;align-items:center;gap:1.25rem;margin-bottom:1.5rem;">
+          ${avatar(u, 'avatar-lg')}
+          <div>
+            <h3 style="margin:0;font-size:1.3rem;">${escHtml(u.first_name+' '+u.last_name)}</h3>
+            <p style="margin:0;color:var(--text-muted);font-size:0.88rem;">@${escHtml(u.username)}</p>
+            <div style="display:flex;gap:0.4rem;margin-top:0.4rem;">
+              <span class="badge badge-easy">${LEVEL_LABELS[u.experience_level]||u.experience_level}</span>
+              ${u.fitness_goal ? `<span class="badge" style="background:rgba(14,165,233,0.15);color:#60c8f5;">${GOAL_LABELS[u.fitness_goal]||u.fitness_goal}</span>` : ''}
+            </div>
+          </div>
+        </div>
+        <h4>Edytuj profil</h4>
+        <div id="profile-msg"></div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Imię</label>
+            <input type="text" class="form-control" id="s-first" value="${escHtml(u.first_name)}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Nazwisko</label>
+            <input type="text" class="form-control" id="s-last" value="${escHtml(u.last_name)}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Miasto</label>
+            <input type="text" class="form-control" id="s-city" value="${escHtml(u.city)}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Płeć</label>
+            <select class="form-select" id="s-gender">
+              <option value="male" ${u.gender==='male'?'selected':''}>Mężczyzna</option>
+              <option value="female" ${u.gender==='female'?'selected':''}>Kobieta</option>
+              <option value="other" ${u.gender==='other'?'selected':''}>Inne</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Poziom zaawansowania</label>
+            <select class="form-select" id="s-level">
+              <option value="beginner" ${u.experience_level==='beginner'?'selected':''}>Początkujący</option>
+              <option value="intermediate" ${u.experience_level==='intermediate'?'selected':''}>Średniozaawansowany</option>
+              <option value="advanced" ${u.experience_level==='advanced'?'selected':''}>Zaawansowany</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Cel treningowy</label>
+            <select class="form-select" id="s-goal">
+              <option value="">Brak</option>
+              <option value="weight_loss" ${u.fitness_goal==='weight_loss'?'selected':''}>Redukcja wagi</option>
+              <option value="muscle_gain" ${u.fitness_goal==='muscle_gain'?'selected':''}>Budowa masy</option>
+              <option value="strength" ${u.fitness_goal==='strength'?'selected':''}>Siła</option>
+              <option value="endurance" ${u.fitness_goal==='endurance'?'selected':''}>Wytrzymałość</option>
+              <option value="general_fitness" ${u.fitness_goal==='general_fitness'?'selected':''}>Ogólna kondycja</option>
+              <option value="competition" ${u.fitness_goal==='competition'?'selected':''}>Zawody</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary" onclick="saveProfile()">Zapisz zmiany</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Informacje konta -->
+      <div class="settings-card">
+        <h4>Informacje konta</h4>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;font-size:0.9rem;">
+          <div><span style="color:var(--text-muted);">Login:</span> <strong>@${escHtml(u.username)}</strong></div>
+          <div><span style="color:var(--text-muted);">Typ konta:</span> <strong>${u.user_type==='admin'?'Administrator':'Użytkownik'}</strong></div>
+        </div>
+      </div>
+
+      <!-- Wyloguj -->
+      <div class="settings-card" style="border-color:rgba(255,87,87,0.2);">
+        <h4 style="color:var(--accent);">Strefa niebezpieczna</h4>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Wylogowanie zakończy aktywną sesję.</p>
+        <button class="btn btn-danger" onclick="logout(event)">Wyloguj się</button>
+      </div>
+    `;
+  }
+
+  async function saveProfile(){
+    const el = document.getElementById('profile-msg');
+    el.innerHTML='';
+    const payload = {
+      first_name:       document.getElementById('s-first').value.trim()||null,
+      last_name:        document.getElementById('s-last').value.trim()||null,
+      city:             document.getElementById('s-city').value.trim()||null,
+      gender:           document.getElementById('s-gender').value||null,
+      experience_level: document.getElementById('s-level').value||null,
+      fitness_goal:     document.getElementById('s-goal').value||null,
+    };
+    try {
+      const d = await api('/api/users/me', {method:'PUT', body:JSON.stringify(payload)});
+      currentUser = d.user;
+      showToast('Zapisano!');
+      render();
+    } catch(e){
+      el.innerHTML=`<div class="alert alert-danger">${escHtml(e.message)}</div>`;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', load);
+  </script>
+</body>
+</html>

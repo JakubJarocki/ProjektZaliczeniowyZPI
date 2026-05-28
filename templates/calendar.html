@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalendarz — MeetFit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg" id="app-navbar"></nav>
+
+  <div class="container" style="padding:2rem 1rem 4rem;">
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h1>📅 Kalendarz treningów</h1>
+      <a href="/create-training" class="btn btn-primary">+ Utwórz trening</a>
+    </div>
+
+    <!-- Filtry -->
+    <div class="filter-bar">
+      <input type="text" class="form-control" id="city-filter" placeholder="🏙️ Filtruj po mieście..." style="max-width:220px;">
+      <select class="form-select" id="type-filter" style="max-width:180px;">
+        <option value="">Wszystkie typy</option>
+        <option value="strength">Siłowy</option>
+        <option value="cardio">Cardio</option>
+        <option value="crossfit">CrossFit</option>
+        <option value="yoga">Joga</option>
+        <option value="other">Inny</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="reloadCalendar()">Filtruj</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">Wyczyść</button>
+      <div style="margin-left:auto;display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:0.8rem;color:var(--text-muted);">
+          <span style="display:inline-block;width:10px;height:10px;background:#28a745;border-radius:3px;margin-right:4px;"></span>Twój
+        </span>
+        <span style="font-size:0.8rem;color:var(--text-muted);">
+          <span style="display:inline-block;width:10px;height:10px;background:#4361ee;border-radius:3px;margin-right:4px;"></span>Siłowy
+        </span>
+        <span style="font-size:0.8rem;color:var(--text-muted);">
+          <span style="display:inline-block;width:10px;height:10px;background:#dc3545;border-radius:3px;margin-right:4px;"></span>Cardio
+        </span>
+        <span style="font-size:0.8rem;color:var(--text-muted);">
+          <span style="display:inline-block;width:10px;height:10px;background:#6f42c1;border-radius:3px;margin-right:4px;"></span>Joga
+        </span>
+        <span style="font-size:0.8rem;color:var(--text-muted);">
+          <span style="display:inline-block;width:10px;height:10px;background:#fd7e14;border-radius:3px;margin-right:4px;"></span>Inne
+        </span>
+      </div>
+    </div>
+
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;">
+      <div id="calendar"></div>
+    </div>
+  </div>
+
+  <!-- Modal szczegółów -->
+  <div class="modal fade" id="trainingModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modal-title"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zamknij</button>
+          <a href="#" class="btn btn-outline-primary" id="modal-details-btn">Szczegóły</a>
+          <button type="button" class="btn btn-primary" id="modal-join-btn" style="display:none" onclick="joinTraining()">Dołącz</button>
+          <button type="button" class="btn btn-danger" id="modal-leave-btn" style="display:none" onclick="leaveTraining()">Opuść</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/app.js"></script>
+  <script>
+  let calendar, currentTrainingId;
+  const modal = () => bootstrap.Modal.getOrCreateInstance(document.getElementById('trainingModal'));
+
+  document.addEventListener('DOMContentLoaded', () => {
+    calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+      initialView: 'dayGridMonth',
+      locale: 'pl',
+      headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek,listWeek' },
+      events: fetchEvents,
+      eventClick: ({ event }) => openModal(event),
+      eventTimeFormat: { hour:'2-digit', minute:'2-digit', hour12:false },
+      height: 'auto',
+    });
+    calendar.render();
+  });
+
+  async function fetchEvents(info, success, fail){
+    try {
+      const city = document.getElementById('city-filter').value.trim();
+      const type = document.getElementById('type-filter').value;
+      let url = '/api/calendar';
+      const params = [];
+      if(city) params.push(`city=${encodeURIComponent(city)}`);
+      if(type) params.push(`training_type=${type}`);
+      if(params.length) url += '?' + params.join('&');
+      const d = await api(url);
+      success(d.events);
+    } catch(e){ fail(e); }
+  }
+
+  function reloadCalendar(){ calendar.refetchEvents(); }
+  function clearFilters(){
+    document.getElementById('city-filter').value='';
+    document.getElementById('type-filter').value='';
+    reloadCalendar();
+  }
+
+  function openModal(event){
+    currentTrainingId = event.id;
+    const p = event.extendedProps;
+    document.getElementById('modal-title').textContent = event.title;
+    document.getElementById('modal-body').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:0.6rem;font-size:0.93rem;">
+        <div><span style="color:var(--text-muted);">Siłownia:</span> <strong>${escHtml(p.gym_name)}</strong></div>
+        <div><span style="color:var(--text-muted);">Miasto:</span> <strong>${escHtml(p.city)}</strong></div>
+        <div><span style="color:var(--text-muted);">Organizator:</span> <strong>${escHtml(p.creator)}</strong></div>
+        <div><span style="color:var(--text-muted);">Typ:</span> ${typeBadge(p.training_type)}</div>
+        <div><span style="color:var(--text-muted);">Status:</span> ${p.is_joined ? '<span class="badge badge-easy">Dołączyłeś ✓</span>' : '<span class="badge" style="background:rgba(14,165,233,0.15);color:#60c8f5;">Możesz dołączyć</span>'}</div>
+      </div>
+    `;
+    document.getElementById('modal-details-btn').href = `/training/${currentTrainingId}`;
+    document.getElementById('modal-join-btn').style.display  = p.is_joined ? 'none' : 'inline-block';
+    document.getElementById('modal-leave-btn').style.display = p.is_joined ? 'inline-block' : 'none';
+    modal().show();
+  }
+
+  async function joinTraining(){
+    try {
+      await api(`/api/trainings/${currentTrainingId}/join`, {method:'POST'});
+      showToast('Dołączono do treningu!');
+      modal().hide();
+      reloadCalendar();
+    } catch(e){ showToast(e.message,'danger'); }
+  }
+
+  async function leaveTraining(){
+    try {
+      await api(`/api/trainings/${currentTrainingId}/join`, {method:'DELETE'});
+      showToast('Opuszczono trening','info');
+      modal().hide();
+      reloadCalendar();
+    } catch(e){ showToast(e.message,'danger'); }
+  }
+  </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utwórz trening — MeetFit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg" id="app-navbar"></nav>
+
+  <div class="container" style="padding:2rem 1rem 4rem;max-width:700px;">
+    <div class="page-header">
+      <a href="/my-trainings" style="color:var(--text-muted);font-size:0.88rem;">← Moje treningi</a>
+      <h1 style="margin-top:0.5rem;">Utwórz nowy trening</h1>
+    </div>
+
+    <div id="auth-warning" class="alert alert-warning" style="display:none;">
+      Musisz być <a href="/login">zalogowany</a>, żeby tworzyć treningi.
+    </div>
+
+    <div id="form-container">
+      <div id="error-msg"></div>
+
+      <!-- SEKCJA 1: Podstawowe info -->
+      <div class="settings-card">
+        <h4>📋 Podstawowe informacje</h4>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Tytuł treningu *</label>
+            <input type="text" class="form-control" id="title" placeholder="np. Trening siłowy nogi + plecy">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Typ treningu *</label>
+            <select class="form-select" id="training_type">
+              <option value="strength">🏋️ Siłowy</option>
+              <option value="cardio">🏃 Cardio</option>
+              <option value="crossfit">⚡ CrossFit</option>
+              <option value="yoga">🧘 Joga</option>
+              <option value="other">💪 Inny</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Poziom trudności *</label>
+            <select class="form-select" id="difficulty_level">
+              <option value="easy">🟢 Łatwy</option>
+              <option value="medium" selected>🟡 Średni</option>
+              <option value="hard">🔴 Trudny</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Opis treningu</label>
+            <textarea class="form-control" id="description" rows="3" placeholder="Opisz plan, co będziecie ćwiczyć, co zabrać ze sobą..."></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Maks. liczba uczestników *</label>
+            <input type="number" class="form-control" id="max_participants" min="2" max="50" value="6">
+            <div class="form-text">Łącznie z Tobą</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEKCJA 2: Lokalizacja (GymLocation) -->
+      <div class="settings-card">
+        <h4>📍 Lokalizacja</h4>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Nazwa siłowni / klubu *</label>
+            <input type="text" class="form-control" id="gym_name" placeholder="np. Fitness Platinium">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Adres</label>
+            <input type="text" class="form-control" id="gym_address" placeholder="ul. Marszałkowska 10">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Miasto *</label>
+            <input type="text" class="form-control" id="city" placeholder="Warszawa">
+          </div>
+        </div>
+      </div>
+
+      <!-- SEKCJA 3: Termin (TrainingSchedule) -->
+      <div class="settings-card">
+        <h4>⏰ Termin</h4>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Data *</label>
+            <input type="date" class="form-control" id="date">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Godzina rozpoczęcia *</label>
+            <input type="time" class="form-control" id="start_time" value="18:00">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Godzina zakończenia</label>
+            <input type="time" class="form-control" id="end_time" value="19:30">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg w-100" id="submit-btn" onclick="createTraining()">
+        Utwórz trening
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/app.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    document.getElementById('date').value = tomorrow.toISOString().split('T')[0];
+    document.getElementById('date').min = new Date().toISOString().split('T')[0];
+
+    const d = await api('/api/me');
+    if(!d.logged_in){
+      document.getElementById('auth-warning').style.display='block';
+      document.getElementById('form-container').style.display='none';
+      return;
+    }
+    if(d.user.city) document.getElementById('city').value = d.user.city;
+  });
+
+  async function createTraining(){
+    const errEl = document.getElementById('error-msg');
+    errEl.innerHTML='';
+
+    const title          = document.getElementById('title').value.trim();
+    const training_type  = document.getElementById('training_type').value;
+    const difficulty_level = document.getElementById('difficulty_level').value;
+    const description    = document.getElementById('description').value.trim();
+    const max_participants = parseInt(document.getElementById('max_participants').value);
+    const gym_name       = document.getElementById('gym_name').value.trim();
+    const gym_address    = document.getElementById('gym_address').value.trim();
+    const city           = document.getElementById('city').value.trim();
+    const date           = document.getElementById('date').value;
+    const start_time     = document.getElementById('start_time').value;
+    const end_time       = document.getElementById('end_time').value;
+
+    if(!title||!gym_name||!city||!date||!start_time){
+      errEl.innerHTML='<div class="alert alert-danger">Uzupełnij wszystkie wymagane pola (*)</div>'; return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled=true; btn.textContent='Tworzenie...';
+
+    // Zagnieżdżona struktura — location (GymLocation) i schedule (TrainingSchedule)
+    const payload = {
+      title,
+      description: description||null,
+      training_type,
+      difficulty_level,
+      max_participants,
+      location: { gym_name, gym_address: gym_address||null, city },
+      schedule: { date, start_time, end_time: end_time||null },
+    };
+
+    try {
+      const d = await api('/api/trainings', {method:'POST', body:JSON.stringify(payload)});
+      showToast('Trening utworzony!');
+      setTimeout(()=>window.location.href=`/training/${d.training_id}`, 800);
+    } catch(e){
+      errEl.innerHTML=`<div class="alert alert-danger">${escHtml(e.message)}</div>`;
+      btn.disabled=false; btn.textContent='Utwórz trening';
+    }
+  }
+  </script>
+</body>
+</html>

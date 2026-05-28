@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rejestracja — MeetFit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg" id="app-navbar"></nav>
+
+  <div class="container" style="padding:2.5rem 1rem 4rem;">
+    <div style="max-width:560px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:2rem;">
+        <a href="/" style="font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--white);text-decoration:none;">Meet<span style="color:var(--primary);">Fit</span></a>
+        <p style="color:var(--text-muted);margin-top:0.5rem;">Dołącz i znajdź partnera treningowego</p>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:2rem;">
+          <div id="error-msg"></div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">Imię *</label>
+              <input type="text" class="form-control" id="first_name" placeholder="Jakub">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Nazwisko *</label>
+              <input type="text" class="form-control" id="last_name" placeholder="Kowalski">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Nazwa użytkownika *</label>
+              <input type="text" class="form-control" id="username" placeholder="jakub_fit" minlength="3">
+              <div class="form-text">Minimum 3 znaki</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Email *</label>
+              <input type="email" class="form-control" id="email" placeholder="jakub@example.com">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Płeć *</label>
+              <select class="form-select" id="gender">
+                <option value="">Wybierz...</option>
+                <option value="male">Mężczyzna</option>
+                <option value="female">Kobieta</option>
+                <option value="other">Inna</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Miasto *</label>
+              <input type="text" class="form-control" id="city" placeholder="Warszawa">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Poziom zaawansowania *</label>
+              <select class="form-select" id="experience_level">
+                <option value="">Wybierz...</option>
+                <option value="beginner">Początkujący</option>
+                <option value="intermediate">Średniozaawansowany</option>
+                <option value="advanced">Zaawansowany</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Cel treningowy</label>
+              <select class="form-select" id="fitness_goal">
+                <option value="">Brak / dowolny</option>
+                <option value="weight_loss">Redukcja wagi</option>
+                <option value="muscle_gain">Budowa masy</option>
+                <option value="strength">Siła</option>
+                <option value="endurance">Wytrzymałość</option>
+                <option value="general_fitness">Ogólna kondycja</option>
+                <option value="competition">Zawody</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Hasło *</label>
+              <input type="password" class="form-control" id="password" placeholder="••••••••" minlength="6">
+              <div class="form-text">Minimum 6 znaków</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Powtórz hasło *</label>
+              <input type="password" class="form-control" id="password2" placeholder="••••••••">
+            </div>
+            <div class="col-12">
+              <button class="btn btn-primary w-100 btn-lg" id="reg-btn" onclick="doRegister()">Zarejestruj się</button>
+            </div>
+          </div>
+          <hr style="border-color:var(--border);margin:1.5rem 0;">
+          <p style="text-align:center;color:var(--text-muted);font-size:0.9rem;margin:0;">
+            Masz już konto? <a href="/login" style="color:var(--primary);font-weight:600;">Zaloguj się</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/app.js"></script>
+  <script>
+  async function doRegister(){
+    const errEl = document.getElementById('error-msg');
+    errEl.innerHTML = '';
+    const fields = {
+      first_name: document.getElementById('first_name').value.trim(),
+      last_name:  document.getElementById('last_name').value.trim(),
+      username:   document.getElementById('username').value.trim(),
+      email:      document.getElementById('email').value.trim(),
+      gender:     document.getElementById('gender').value,
+      city:       document.getElementById('city').value.trim(),
+      experience_level: document.getElementById('experience_level').value,
+      fitness_goal:     document.getElementById('fitness_goal').value || null,
+      password:   document.getElementById('password').value,
+    };
+    const p2 = document.getElementById('password2').value;
+
+    if(!fields.first_name||!fields.last_name||!fields.username||!fields.email||!fields.gender||!fields.city||!fields.experience_level||!fields.password){
+      errEl.innerHTML='<div class="alert alert-danger">Uzupełnij wszystkie wymagane pola</div>'; return;
+    }
+    if(fields.username.length < 3){ errEl.innerHTML='<div class="alert alert-danger">Nazwa użytkownika musi mieć min. 3 znaki</div>'; return; }
+    if(fields.password.length < 6){ errEl.innerHTML='<div class="alert alert-danger">Hasło musi mieć min. 6 znaków</div>'; return; }
+    if(fields.password !== p2){ errEl.innerHTML='<div class="alert alert-danger">Hasła nie są identyczne</div>'; return; }
+
+    const btn = document.getElementById('reg-btn');
+    btn.disabled=true; btn.textContent='Rejestracja...';
+    try {
+      await api('/api/register', {method:'POST', body:JSON.stringify(fields)});
+      showToast('Konto utworzone! Zaloguj się.');
+      setTimeout(()=>window.location.href='/login', 1000);
+    } catch(e) {
+      errEl.innerHTML=`<div class="alert alert-danger">${escHtml(e.message)}</div>`;
+      btn.disabled=false; btn.textContent='Zarejestruj się';
+    }
+  }
+  </script>
+</body>
+</html>

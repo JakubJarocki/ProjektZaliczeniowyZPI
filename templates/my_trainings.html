@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moje treningi — MeetFit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg" id="app-navbar"></nav>
+
+  <div class="container" style="padding:2rem 1rem 4rem;">
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h1>📚 Moje treningi</h1>
+      <a href="/create-training" class="btn btn-primary">+ Utwórz trening</a>
+    </div>
+
+    <ul class="nav nav-tabs mb-0" id="myTabs">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#created">Utworzone przeze mnie</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#joined">Dołączyłem</button></li>
+    </ul>
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="created">
+        <div id="created-list"><div class="loading-state"><div class="spinner-border"></div></div></div>
+      </div>
+      <div class="tab-pane fade" id="joined">
+        <div id="joined-list"><div class="loading-state"><div class="spinner-border"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/app.js"></script>
+  <script>
+  async function load(){
+    try {
+      const d = await api('/api/my-trainings');
+      renderList('created-list', d.created_trainings, true);
+      renderList('joined-list', d.joined_trainings, false);
+    } catch(e){
+      if(e.message.includes('401')||e.message.includes('Wymagane')){
+        window.location.href='/login?next=/my-trainings'; return;
+      }
+      document.getElementById('created-list').innerHTML='<div class="alert alert-danger">'+escHtml(e.message)+'</div>';
+    }
+  }
+
+  function trainingCard(t, isCreated){
+    const isPast = new Date(t.schedule.date+'T'+t.schedule.start_time) < new Date();
+    const pct    = Math.round((t.current_participants/t.max_participants)*100);
+    return `
+      <div class="col-md-6">
+        <div class="card training-card h-100" onclick="window.location.href='/training/${t.id}'" style="cursor:pointer;">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.6rem;">
+              <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">${typeBadge(t.training_type)} ${diffBadge(t.difficulty_level)}</div>
+              <span class="badge" style="background:${isPast?'rgba(139,148,158,0.15)':'rgba(0,200,150,0.15)'};color:${isPast?'var(--text-muted)':'var(--primary)'};white-space:nowrap;">${isPast?'Zakończony':'Nadchodzący'}</span>
+            </div>
+            <h5 class="card-title" style="margin-bottom:0.4rem;">${escHtml(t.title)}</h5>
+            <div class="training-meta" style="margin-bottom:0.75rem;">
+              <div class="training-meta-item">📅 ${fmtDate(t.schedule.date)}</div>
+              <div class="training-meta-item">⏰ ${fmtTime(t.schedule.start_time)}</div>
+              <div class="training-meta-item">📍 ${escHtml(t.location.city)}</div>
+              <div class="training-meta-item">🏋️ ${escHtml(t.location.gym_name)}</div>
+            </div>
+            <div style="margin-bottom:0.75rem;">
+              <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.3rem;">
+                <span>Uczestnicy</span><span>${t.current_participants}/${t.max_participants}</span>
+              </div>
+              <div class="participants-bar"><div class="participants-bar-fill" style="width:${pct}%"></div></div>
+            </div>
+            ${!isPast ? `<div style="display:flex;gap:0.5rem;" onclick="event.stopPropagation()">
+              <a href="/training/${t.id}" class="btn btn-outline-primary btn-sm">Szczegóły</a>
+              ${isCreated ? `<button class="btn btn-danger btn-sm" onclick="deleteT('${t.id}')">Usuń</button>` : `<button class="btn btn-outline-secondary btn-sm" onclick="leaveT('${t.id}')">Opuść</button>`}
+            </div>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderList(elId, trainings, isCreated){
+    const el = document.getElementById(elId);
+    if(!trainings||!trainings.length){
+      el.innerHTML=`<div class="empty-state">
+        <div class="empty-state-icon">${isCreated?'🏋️':'🔍'}</div>
+        <h4>${isCreated?'Nie masz jeszcze żadnych treningów':'Nie dołączyłeś do żadnego treningu'}</h4>
+        <p>${isCreated?'Utwórz pierwszy trening i zaproś innych!':'Przeglądaj kalendarz i znajdź coś dla siebie.'}</p>
+        <a href="${isCreated?'/create-training':'/calendar'}" class="btn btn-primary mt-2">${isCreated?'Utwórz trening':'Przeglądaj treningi'}</a>
+      </div>`;
+      return;
+    }
+    el.innerHTML=`<div class="row g-3 mt-0">${trainings.map(t=>trainingCard(t,isCreated)).join('')}</div>`;
+  }
+
+  async function deleteT(id){
+    if(!confirm('Usunąć trening?')) return;
+    try { await api(`/api/trainings/${id}`,{method:'DELETE'}); showToast('Trening usunięty'); load(); }
+    catch(e){ showToast(e.message,'danger'); }
+  }
+
+  async function leaveT(id){
+    if(!confirm('Opuścić trening?')) return;
+    try { await api(`/api/trainings/${id}/join`,{method:'DELETE'}); showToast('Opuszczono trening','info'); load(); }
+    catch(e){ showToast(e.message,'danger'); }
+  }
+
+  document.addEventListener('DOMContentLoaded', load);
+  </script>
+</body>
+</html>

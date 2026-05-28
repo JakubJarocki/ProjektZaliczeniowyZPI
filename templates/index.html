@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeetFit — Znajdź partnera treningowego</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 1.25rem; }
+    .feature-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem; transition: all 0.25s; }
+    .feature-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,200,150,0.1); }
+    .feature-icon { width: 52px; height: 52px; background: rgba(0,200,150,0.12); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; }
+    .feature-card h5 { font-family: 'Syne', sans-serif; margin-bottom: 0.4rem; }
+    .feature-card p { color: var(--text-muted); font-size: 0.92rem; margin: 0; }
+    .step-num { width: 36px; height: 36px; background: var(--primary); color: var(--dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem; flex-shrink: 0; }
+    .step-row { display: flex; gap: 1.1rem; align-items: flex-start; }
+    .hero-stats { display: flex; gap: 2.5rem; flex-wrap: wrap; margin-top: 2rem; }
+    .hero-stat-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.8rem; color: var(--primary); }
+    .hero-stat-lbl { color: var(--text-muted); font-size: 0.82rem; }
+    .cta-section { background: linear-gradient(135deg, rgba(0,200,150,0.08), rgba(0,145,255,0.08)); border: 1px solid rgba(0,200,150,0.2); border-radius: var(--radius-lg); padding: 3rem 2rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg" id="app-navbar"></nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-6">
+          <div style="display:inline-flex;align-items:center;gap:0.5rem;background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.25);border-radius:999px;padding:0.35rem 0.9rem;font-size:0.82rem;color:var(--primary);margin-bottom:1.25rem;">
+            🏋️ Platforma do wspólnych treningów
+          </div>
+          <h1>Trenuj razem,<br><span>osiągaj więcej</span></h1>
+          <p class="mt-3">MeetFit łączy ludzi, którzy chcą ćwiczyć razem. Znajdź partnera, umów trening, motywuj się nawzajem.</p>
+          <div class="d-flex gap-3 mt-4 flex-wrap">
+            <a href="/register" class="btn btn-primary btn-lg">Zacznij za darmo</a>
+            <a href="/calendar" class="btn btn-outline-secondary btn-lg">Przeglądaj treningi</a>
+          </div>
+          <div class="hero-stats">
+            <div><div class="hero-stat-num" id="stat-users">—</div><div class="hero-stat-lbl">Użytkowników</div></div>
+            <div><div class="hero-stat-num" id="stat-trainings">—</div><div class="hero-stat-lbl">Treningów</div></div>
+            <div><div class="hero-stat-num" id="stat-cities">—</div><div class="hero-stat-lbl">Miast</div></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div id="featured-trainings" style="display:flex;flex-direction:column;gap:0.85rem;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section style="padding: 5rem 0; background: var(--dark2);">
+    <div class="container">
+      <div class="text-center mb-4">
+        <h2>Wszystko czego potrzebujesz</h2>
+        <p style="color:var(--text-muted);max-width:480px;margin:0.5rem auto 0;">Jedna platforma do organizacji treningów z innymi ludźmi</p>
+      </div>
+      <div class="features-grid mt-4">
+        <div class="feature-card">
+          <div class="feature-icon">📅</div>
+          <h5>Kalendarz treningów</h5>
+          <p>Przeglądaj dostępne treningi w swoim mieście. Filtruj po typie i poziomie zaawansowania.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏋️</div>
+          <h5>Twórz treningi</h5>
+          <p>Zaplanuj trening, podaj siłownię, godzinę i maksymalną liczbę uczestników.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👥</div>
+          <h5>Dołączaj do innych</h5>
+          <p>Znajdź trening pasujący do Twojego poziomu i grafiku. Jedno kliknięcie, gotowe.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h5>Komentarze</h5>
+          <p>Pytaj organizatora, ustalaj szczegóły. Sekcja komentarzy pod każdym treningiem.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📍</div>
+          <h5>Lokalne społeczności</h5>
+          <p>Filtruj treningi po mieście i znajdź ludzi blisko Ciebie.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h5>Różne dyscypliny</h5>
+          <p>Siłowy, cardio, crossfit, joga i więcej. Dla każdego poziomu zaawansowania.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JAK TO DZIAŁA -->
+  <section style="padding: 5rem 0;">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-5">
+          <h2>Jak to działa?</h2>
+          <p style="color:var(--text-muted);margin-top:0.5rem;">Trzy kroki do pierwszego wspólnego treningu</p>
+          <div style="display:flex;flex-direction:column;gap:1.5rem;margin-top:2rem;">
+            <div class="step-row">
+              <div class="step-num">1</div>
+              <div>
+                <h5 style="margin-bottom:0.25rem;">Zarejestruj się</h5>
+                <p style="color:var(--text-muted);font-size:0.92rem;margin:0;">Podaj swój poziom zaawansowania, miasto i cel treningowy.</p>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">2</div>
+              <div>
+                <h5 style="margin-bottom:0.25rem;">Znajdź trening</h5>
+                <p style="color:var(--text-muted);font-size:0.92rem;margin:0;">Przeglądaj kalendarz, filtruj po mieście i typie treningu.</p>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">3</div>
+              <div>
+                <h5 style="margin-bottom:0.25rem;">Dołącz lub utwórz</h5>
+                <p style="color:var(--text-muted);font-size:0.92rem;margin:0;">Kliknij "Dołącz" albo sam utwórz trening i zaproś innych.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="cta-section">
+            <h3 style="margin-bottom:0.75rem;">Gotowy na pierwszy wspólny trening?</h3>
+            <p style="color:var(--text-muted);margin-bottom:1.75rem;">Dołącz do MeetFit i znajdź partnerów treningowych w swoim mieście.</p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+              <a href="/register" class="btn btn-primary btn-lg">Załóż konto</a>
+              <a href="/calendar" class="btn btn-outline-secondary btn-lg">Przeglądaj treningi</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="background:var(--dark2);border-top:1px solid var(--border);padding:2rem 0;text-align:center;color:var(--text-muted);font-size:0.85rem;">
+    <div class="container">
+      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--white);">Meet<span style="color:var(--primary);">Fit</span></span>
+      <p style="margin:0.5rem 0 0;">© 2026 MeetFit — Platforma do organizacji wspólnych aktywności sportowych</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/app.js"></script>
+  <script>
+  async function loadStats(){
+    try {
+      const d = await api('/api/trainings');
+      const m = await api('/api/me');
+      document.getElementById('stat-trainings').textContent = d.trainings.length;
+      const cities = new Set(d.trainings.map(t=>t.location.city));
+      document.getElementById('stat-cities').textContent = cities.size;
+    } catch(e){}
+    try {
+      const d = await api('/api/users');
+      document.getElementById('stat-users').textContent = d.users.length;
+    } catch(e){ document.getElementById('stat-users').textContent = '—'; }
+  }
+
+  async function loadFeatured(){
+    try {
+      const d = await api('/api/trainings');
+      const el = document.getElementById('featured-trainings');
+      const upcoming = d.trainings.slice(0,3);
+      if(!upcoming.length){ el.innerHTML=''; return; }
+      el.innerHTML = upcoming.map(t=>`
+        <a href="/training/${t.id}" style="text-decoration:none;">
+          <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem 1.25rem;display:flex;align-items:center;gap:1rem;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="width:46px;height:46px;background:rgba(0,200,150,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">
+              ${{strength:'🏋️',cardio:'🏃',yoga:'🧘',crossfit:'⚡',other:'💪'}[t.training_type]||'💪'}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(t.title)}</div>
+              <div style="font-size:0.82rem;color:var(--text-muted);">${t.location.city} · ${fmtDate(t.schedule.date)} · ${fmtTime(t.schedule.start_time)}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-size:0.78rem;color:var(--primary);font-weight:600;">${t.current_participants}/${t.max_participants}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">miejsc</div>
+            </div>
+          </div>
+        </a>
+      `).join('');
+    } catch(e){}
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    loadStats();
+    loadFeatured();
+  });
+  </script>
+</body>
+</html>
