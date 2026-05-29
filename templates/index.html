@@ -125,8 +125,13 @@
           </div>
         </div>
         <div class="col-lg-7">
-          <div class="cta-section" id="cta-section">
-            <!-- wypełniane przez JS zależnie od stanu logowania -->
+          <div class="cta-section">
+            <h3 style="margin-bottom:0.75rem;">Gotowy na pierwszy wspólny trening?</h3>
+            <p style="color:var(--text-muted);margin-bottom:1.75rem;">Dołącz do MeetFit i znajdź partnerów treningowych w swoim mieście.</p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+              <a href="/register" class="btn btn-primary btn-lg">Załóż konto</a>
+              <a href="/calendar" class="btn btn-outline-secondary btn-lg">Przeglądaj treningi</a>
+            </div>
           </div>
         </div>
       </div>
@@ -147,49 +152,15 @@
   async function loadStats(){
     try {
       const d = await api('/api/trainings');
+      const m = await api('/api/me');
       document.getElementById('stat-trainings').textContent = d.trainings.length;
       const cities = new Set(d.trainings.map(t=>t.location.city));
       document.getElementById('stat-cities').textContent = cities.size;
     } catch(e){}
-    // liczba użytkowników — bez logowania pokazujemy —
     try {
-      const me = await api('/api/me');
-      if(me.logged_in){
-        const d = await api('/api/users');
-        document.getElementById('stat-users').textContent = d.users.length;
-        renderCTA(true, me.user);
-      } else {
-        document.getElementById('stat-users').textContent = '—';
-        renderCTA(false, null);
-      }
-    } catch(e){
-      document.getElementById('stat-users').textContent = '—';
-      renderCTA(false, null);
-    }
-  }
-
-  function renderCTA(loggedIn, user){
-    const el = document.getElementById('cta-section');
-    if(!el) return;
-    if(loggedIn){
-      el.innerHTML = `
-        <h3 style="margin-bottom:0.75rem;">Cześć, ${escHtml(user.first_name)}! 👋</h3>
-        <p style="color:var(--text-muted);margin-bottom:1.75rem;">Gotowy na kolejny trening? Sprawdź co dzieje się w Twoim mieście.</p>
-        <div class="d-flex gap-3 justify-content-center flex-wrap">
-          <a href="/calendar" class="btn btn-primary btn-lg">Przeglądaj treningi</a>
-          <a href="/create-training" class="btn btn-outline-secondary btn-lg">Utwórz trening</a>
-        </div>
-      `;
-    } else {
-      el.innerHTML = `
-        <h3 style="margin-bottom:0.75rem;">Gotowy na pierwszy wspólny trening?</h3>
-        <p style="color:var(--text-muted);margin-bottom:1.75rem;">Dołącz do MeetFit i znajdź partnerów treningowych w swoim mieście.</p>
-        <div class="d-flex gap-3 justify-content-center flex-wrap">
-          <a href="/register" class="btn btn-primary btn-lg">Załóż konto</a>
-          <a href="/calendar" class="btn btn-outline-secondary btn-lg">Przeglądaj treningi</a>
-        </div>
-      `;
-    }
+      const d = await api('/api/users');
+      document.getElementById('stat-users').textContent = d.users.length;
+    } catch(e){ document.getElementById('stat-users').textContent = '—'; }
   }
 
   async function loadFeatured(){

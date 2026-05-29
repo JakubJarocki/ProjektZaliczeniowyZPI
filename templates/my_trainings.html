@@ -39,7 +39,10 @@
       renderList('created-list', d.created_trainings, true);
       renderList('joined-list', d.joined_trainings, false);
     } catch(e){
-      window.location.href='/login?next=/my-trainings';
+      if(e.message.includes('401')||e.message.includes('Wymagane')){
+        window.location.href='/login?next=/my-trainings'; return;
+      }
+      document.getElementById('created-list').innerHTML='<div class="alert alert-danger">'+escHtml(e.message)+'</div>';
     }
   }
 
