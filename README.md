@@ -2,6 +2,10 @@
 
 Platforma internetowa do organizacji wspólnych aktywności sportowych.
 
+## Działająca aplikacja
+
+**https://meetfit-gf12.onrender.com**
+
 ## Uruchomienie lokalne
 
 ```bash
