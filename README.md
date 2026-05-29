@@ -1,4 +1,4 @@
-# MeetFit 🏋️
+# MeetFit 
 
 Platforma internetowa do organizacji wspólnych aktywności sportowych.
 
