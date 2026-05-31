@@ -1,8 +1,12 @@
-# MeetFit 🏋️
+# MeetFit 
 
 Platforma internetowa do organizacji wspólnych aktywności sportowych.
 
+<<<<<<< HEAD
 ## 🌐 Działająca aplikacja
+=======
+## Działająca aplikacja
+>>>>>>> be5408e75bb7d7833f7882cb34b5348ca0a75d26
 
 **https://meetfit-gf12.onrender.com**
 
