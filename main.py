@@ -216,8 +216,10 @@ def seed_data():
     if users_db:
         return
 
-    admin = {
-        "id": str(uuid.uuid4()),
+    # ── ADMIN ──
+    admin_id = str(uuid.uuid4())
+    users_db.append({
+        "id": admin_id,
         "username": "admin",
         "email": "admin@meetfit.pl",
         "password_hash": hash_password("admin123"),
@@ -229,112 +231,157 @@ def seed_data():
         "city": "Warszawa",
         "user_type": "admin",
         "created_at": datetime.now().isoformat(),
-    }
-    users_db.append(admin)
+    })
 
+    # ── UŻYTKOWNICY (15 osób, różne miasta) ──
     users_data = [
-        ("jakub", "jakub@meetfit.pl", "Jakub", "Jarocki", "male", "intermediate", "muscle_gain", "Warszawa"),
-        ("anna_k", "anna@meetfit.pl", "Anna", "Kowalska", "female", "beginner", "weight_loss", "Kraków"),
-        ("piotr_w", "piotr@meetfit.pl", "Piotr", "Wiśniewski", "male", "advanced", "strength", "Wrocław"),
-        ("marta_n", "marta@meetfit.pl", "Marta", "Nowak", "female", "intermediate", "endurance", "Warszawa"),
+        ("jakub",     "jakub@meetfit.pl",     "Jakub",     "Jarocki",     "male",   "intermediate", "muscle_gain",    "Warszawa"),
+        ("anna_k",    "anna@meetfit.pl",       "Anna",      "Kowalska",    "female", "beginner",     "weight_loss",    "Kraków"),
+        ("piotr_w",   "piotr@meetfit.pl",      "Piotr",     "Wiśniewski",  "male",   "advanced",     "strength",       "Wrocław"),
+        ("marta_n",   "marta@meetfit.pl",      "Marta",     "Nowak",       "female", "intermediate", "endurance",      "Warszawa"),
+        ("tomek_g",   "tomek@meetfit.pl",      "Tomasz",    "Grabowski",   "male",   "advanced",     "competition",    "Gdańsk"),
+        ("karol_m",   "karol@meetfit.pl",      "Karolina",  "Mazur",       "female", "beginner",     "general_fitness","Poznań"),
+        ("michal_z",  "michal@meetfit.pl",     "Michał",    "Zając",       "male",   "intermediate", "muscle_gain",    "Gdańsk"),
+        ("ola_b",     "ola@meetfit.pl",        "Aleksandra","Bąk",         "female", "advanced",     "strength",       "Wrocław"),
+        ("radek_k",   "radek@meetfit.pl",      "Radosław",  "Kaczmarek",   "male",   "beginner",     "weight_loss",    "Łódź"),
+        ("kasia_p",   "kasia@meetfit.pl",      "Katarzyna", "Pawlak",      "female", "intermediate", "endurance",      "Kraków"),
+        ("bartek_s",  "bartek@meetfit.pl",     "Bartosz",   "Sikora",      "male",   "advanced",     "competition",    "Warszawa"),
+        ("ewa_w",     "ewa@meetfit.pl",        "Ewa",       "Wróbel",      "female", "beginner",     "general_fitness","Poznań"),
+        ("lukasz_d",  "lukasz@meetfit.pl",     "Łukasz",    "Dąbrowski",   "male",   "intermediate", "muscle_gain",    "Łódź"),
+        ("magda_j",   "magda@meetfit.pl",      "Magdalena", "Jabłońska",   "female", "advanced",     "strength",       "Gdańsk"),
+        ("robert_c",  "robert@meetfit.pl",     "Robert",    "Czajka",      "male",   "intermediate", "endurance",      "Wrocław"),
     ]
 
-    user_ids = []
+    uids = []
     for u in users_data:
         uid = str(uuid.uuid4())
-        user_ids.append(uid)
+        uids.append(uid)
         users_db.append({
             "id": uid,
-            "username": u[0],
-            "email": u[1],
+            "username": u[0], "email": u[1],
             "password_hash": hash_password("test123"),
-            "first_name": u[2],
-            "last_name": u[3],
-            "gender": u[4],
-            "experience_level": u[5],
-            "fitness_goal": u[6],
-            "city": u[7],
+            "first_name": u[2], "last_name": u[3],
+            "gender": u[4], "experience_level": u[5],
+            "fitness_goal": u[6], "city": u[7],
             "user_type": "user",
             "created_at": datetime.now().isoformat(),
         })
 
+    # skróty dla czytelności
+    jakub, anna, piotr, marta, tomek = uids[0], uids[1], uids[2], uids[3], uids[4]
+    karol, michal, ola, radek, kasia = uids[5], uids[6], uids[7], uids[8], uids[9]
+    bartek, ewa, lukasz, magda, robert = uids[10], uids[11], uids[12], uids[13], uids[14]
+
+    # ── TRENINGI — cały czerwiec 2026 ──
+    # Dni bez treningu: 6, 9, 14, 18, 22, 25 → reszta ma 1-2 treningi
     trainings_data = [
-        {
-            "title": "Poranny trening siłowy",
-            "description": "Skupiamy się na klatce i tricepsach. Poziom średniozaawansowany.",
-            "training_type": "strength",
-            "difficulty_level": "medium",
-            "max_participants": 4,
-            "location": {"gym_name": "Fitness Platinium", "gym_address": "ul. Marszałkowska 10", "city": "Warszawa"},
-            "schedule": {"date": "2026-06-01", "start_time": "07:00", "end_time": "08:30"},
-            "creator_id": user_ids[0],
-        },
-        {
-            "title": "Joga dla początkujących",
-            "description": "Relaksacyjna sesja jogi. Przynieś matę!",
-            "training_type": "yoga",
-            "difficulty_level": "easy",
-            "max_participants": 8,
-            "location": {"gym_name": "Yoga Studio Zen", "gym_address": "ul. Floriańska 5", "city": "Kraków"},
-            "schedule": {"date": "2026-06-02", "start_time": "09:00", "end_time": "10:00"},
-            "creator_id": user_ids[1],
-        },
-        {
-            "title": "CrossFit — WOD z przyjaciółmi",
-            "description": "Intensywny trening crossfit. Tylko dla zaawansowanych!",
-            "training_type": "crossfit",
-            "difficulty_level": "hard",
-            "max_participants": 6,
-            "location": {"gym_name": "CrossFit Wrocław", "gym_address": "ul. Świdnicka 22", "city": "Wrocław"},
-            "schedule": {"date": "2026-06-03", "start_time": "18:00", "end_time": "19:30"},
-            "creator_id": user_ids[2],
-        },
-        {
-            "title": "Cardio i bieżnia",
-            "description": "Trening cardio na bieżni + rower stacjonarny.",
-            "training_type": "cardio",
-            "difficulty_level": "easy",
-            "max_participants": 5,
-            "location": {"gym_name": "McFit Warszawa", "gym_address": "ul. Puławska 45", "city": "Warszawa"},
-            "schedule": {"date": "2026-06-04", "start_time": "17:00", "end_time": "18:00"},
-            "creator_id": user_ids[3],
-        },
-        {
-            "title": "Nogi i plecy — trening klasyczny",
-            "description": "Przysiad, martwy ciąg, wiosłowanie. Klasyczny plan.",
-            "training_type": "strength",
-            "difficulty_level": "hard",
-            "max_participants": 3,
-            "location": {"gym_name": "Gym One", "gym_address": "ul. Nowy Świat 15", "city": "Warszawa"},
-            "schedule": {"date": "2026-06-05", "start_time": "16:00", "end_time": "17:30"},
-            "creator_id": user_ids[0],
-        },
+        # 1 czerwca
+        {"title": "Poranny trening siłowy — klatka i triceps", "description": "Skupiamy się na klatce piersiowej i tricepsach. Wyciskanie, rozpiętki, pompki na poręczach.", "training_type": "strength", "difficulty_level": "medium", "max_participants": 4, "location": {"gym_name": "Fitness Platinium", "gym_address": "ul. Marszałkowska 10", "city": "Warszawa"}, "schedule": {"date": "2026-06-01", "start_time": "07:00", "end_time": "08:30"}, "creator_id": jakub},
+        # 2 czerwca
+        {"title": "Joga dla początkujących", "description": "Relaksacyjna sesja jogi. Przynieś własną matę. Skupiamy się na oddechu i rozciąganiu.", "training_type": "yoga", "difficulty_level": "easy", "max_participants": 8, "location": {"gym_name": "Yoga Studio Zen", "gym_address": "ul. Floriańska 5", "city": "Kraków"}, "schedule": {"date": "2026-06-02", "start_time": "09:00", "end_time": "10:00"}, "creator_id": anna},
+        # 3 czerwca
+        {"title": "CrossFit WOD — siła i kondycja", "description": "Intensywny trening crossfit. Burpees, kettlebell swings, box jumps. Tylko dla zaawansowanych!", "training_type": "crossfit", "difficulty_level": "hard", "max_participants": 6, "location": {"gym_name": "CrossFit Wrocław", "gym_address": "ul. Świdnicka 22", "city": "Wrocław"}, "schedule": {"date": "2026-06-03", "start_time": "18:00", "end_time": "19:30"}, "creator_id": piotr},
+        # 4 czerwca
+        {"title": "Cardio — bieżnia i rower", "description": "45 minut cardio: 20 min bieżnia, 25 min rower stacjonarny. Tempo umiarkowane.", "training_type": "cardio", "difficulty_level": "easy", "max_participants": 5, "location": {"gym_name": "McFit Warszawa", "gym_address": "ul. Puławska 45", "city": "Warszawa"}, "schedule": {"date": "2026-06-04", "start_time": "17:00", "end_time": "18:00"}, "creator_id": marta},
+        # 5 czerwca
+        {"title": "Nogi i plecy — trening klasyczny", "description": "Przysiad ze sztangą, martwy ciąg, wiosłowanie. Solidna praca nad dużymi partiami mięśniowymi.", "training_type": "strength", "difficulty_level": "hard", "max_participants": 3, "location": {"gym_name": "Gym One", "gym_address": "ul. Nowy Świat 15", "city": "Warszawa"}, "schedule": {"date": "2026-06-05", "start_time": "16:00", "end_time": "17:30"}, "creator_id": jakub},
+        # 5 czerwca — Gdańsk
+        {"title": "Bieganie po plaży — interwały", "description": "Trening biegowy na plaży. Seria sprintów i truchtu. Spotykamy się przy wejściu nr 5.", "training_type": "cardio", "difficulty_level": "medium", "max_participants": 10, "location": {"gym_name": "Plaża Jelitkowo", "gym_address": "ul. Jelitkowska 1", "city": "Gdańsk"}, "schedule": {"date": "2026-06-05", "start_time": "07:30", "end_time": "09:00"}, "creator_id": tomek},
+        # 7 czerwca
+        {"title": "Pilates — core i stabilizacja", "description": "Godzina pilatesu skupionego na wzmacnianiu core. Poziom dla wszystkich.", "training_type": "yoga", "difficulty_level": "easy", "max_participants": 6, "location": {"gym_name": "Studio Forma", "gym_address": "ul. Długa 8", "city": "Poznań"}, "schedule": {"date": "2026-06-07", "start_time": "10:00", "end_time": "11:00"}, "creator_id": karol},
+        # 8 czerwca
+        {"title": "Siłownia — Push Day", "description": "Klasyczny push day: klatka, barki, triceps. Pytaj na czacie jeśli masz pytania do planu.", "training_type": "strength", "difficulty_level": "medium", "max_participants": 4, "location": {"gym_name": "BodyFit Gdańsk", "gym_address": "ul. Grunwaldzka 100", "city": "Gdańsk"}, "schedule": {"date": "2026-06-08", "start_time": "18:30", "end_time": "20:00"}, "creator_id": michal},
+        # 8 czerwca — Wrocław
+        {"title": "Crossfit dla początkujących", "description": "Wprowadzenie do crossfitu. Uczymy techniki podstawowych ruchów. Brak limitu stażu.", "training_type": "crossfit", "difficulty_level": "easy", "max_participants": 8, "location": {"gym_name": "CrossFit Wrocław", "gym_address": "ul. Świdnicka 22", "city": "Wrocław"}, "schedule": {"date": "2026-06-08", "start_time": "10:00", "end_time": "11:30"}, "creator_id": ola},
+        # 10 czerwca
+        {"title": "Trening funkcjonalny — TRX", "description": "Trening z taśmami TRX. Praca z własną masą ciała. Przynieś butelkę wody.", "training_type": "strength", "difficulty_level": "medium", "max_participants": 5, "location": {"gym_name": "FitZone Łódź", "gym_address": "ul. Piotrkowska 200", "city": "Łódź"}, "schedule": {"date": "2026-06-10", "start_time": "17:00", "end_time": "18:00"}, "creator_id": radek},
+        # 11 czerwca
+        {"title": "Joga — power flow", "description": "Dynamiczna joga dla średniozaawansowanych. Połączenie siły i elastyczności.", "training_type": "yoga", "difficulty_level": "medium", "max_participants": 7, "location": {"gym_name": "Yoga Studio Zen", "gym_address": "ul. Floriańska 5", "city": "Kraków"}, "schedule": {"date": "2026-06-11", "start_time": "08:00", "end_time": "09:30"}, "creator_id": kasia},
+        # 12 czerwca
+        {"title": "Maraton treningowy — Pull Day", "description": "Plecy i biceps: podciągania, wiosłowania, uginania. Przyjdź głodny treningu!", "training_type": "strength", "difficulty_level": "hard", "max_participants": 4, "location": {"gym_name": "Gym One", "gym_address": "ul. Nowy Świat 15", "city": "Warszawa"}, "schedule": {"date": "2026-06-12", "start_time": "19:00", "end_time": "20:30"}, "creator_id": bartek},
+        # 13 czerwca
+        {"title": "Bieganie — 5K razem", "description": "Wspólny bieg 5 km po parku. Tempo 5:30-6:00 min/km. Startujemy od fontanny.", "training_type": "cardio", "difficulty_level": "easy", "max_participants": 12, "location": {"gym_name": "Park Cytadela", "gym_address": "ul. Cytadela 1", "city": "Poznań"}, "schedule": {"date": "2026-06-13", "start_time": "07:00", "end_time": "08:00"}, "creator_id": ewa},
+        # 15 czerwca
+        {"title": "Siłownia — nogi i pośladki", "description": "Praca nad nogami: przysiady, wykroki, leg press. Obowiązkowe rozgrzewanie 10 min.", "training_type": "strength", "difficulty_level": "medium", "max_participants": 4, "location": {"gym_name": "FitZone Łódź", "gym_address": "ul. Piotrkowska 200", "city": "Łódź"}, "schedule": {"date": "2026-06-15", "start_time": "16:30", "end_time": "18:00"}, "creator_id": lukasz},
+        # 16 czerwca
+        {"title": "Poranny CrossFit — AMRAP 20", "description": "20 minut AMRAP: 10 burpees, 15 kettlebell swings, 20 sit-ups. Zaawansowani mile widziani.", "training_type": "crossfit", "difficulty_level": "hard", "max_participants": 6, "location": {"gym_name": "CrossBox Gdańsk", "gym_address": "ul. Wrzeszcz 5", "city": "Gdańsk"}, "schedule": {"date": "2026-06-16", "start_time": "06:30", "end_time": "07:30"}, "creator_id": magda},
+        # 16 czerwca — Wrocław
+        {"title": "Cardio + stretching", "description": "Godzina cardio na sprzęcie + 20 minut stretchingu. Dobry trening na środek tygodnia.", "training_type": "cardio", "difficulty_level": "easy", "max_participants": 6, "location": {"gym_name": "Fitness World Wrocław", "gym_address": "ul. Legnicka 55", "city": "Wrocław"}, "schedule": {"date": "2026-06-16", "start_time": "17:30", "end_time": "19:00"}, "creator_id": robert},
+        # 17 czerwca
+        {"title": "Trening siłowy — full body", "description": "Pełny trening całego ciała. Idealne na środek tygodnia. 3 serie po 10 powtórzeń na ćwiczenie.", "training_type": "strength", "difficulty_level": "medium", "max_participants": 5, "location": {"gym_name": "Fitness Platinium", "gym_address": "ul. Marszałkowska 10", "city": "Warszawa"}, "schedule": {"date": "2026-06-17", "start_time": "18:00", "end_time": "19:30"}, "creator_id": jakub},
+        # 19 czerwca
+        {"title": "Joga — relaks i medytacja", "description": "Yin yoga i medytacja. 90 minut głębokiego rozciągania i wyciszenia umysłu.", "training_type": "yoga", "difficulty_level": "easy", "max_participants": 10, "location": {"gym_name": "Yoga Studio Zen", "gym_address": "ul. Floriańska 5", "city": "Kraków"}, "schedule": {"date": "2026-06-19", "start_time": "18:00", "end_time": "19:30"}, "creator_id": anna},
+        # 20 czerwca
+        {"title": "Crossfit — Murph challenge", "description": "Legendarny WOD Murph: 1 mila biegu, 100 podciągnięć, 200 pompek, 300 przysiadów, 1 mila biegu.", "training_type": "crossfit", "difficulty_level": "hard", "max_participants": 8, "location": {"gym_name": "CrossFit Wrocław", "gym_address": "ul. Świdnicka 22", "city": "Wrocław"}, "schedule": {"date": "2026-06-20", "start_time": "09:00", "end_time": "11:00"}, "creator_id": piotr},
+        # 20 czerwca — Gdańsk
+        {"title": "Bieganie na czas — 10K", "description": "Próba na 10 km. Mierzymy czas. Trasa: wzdłuż brzegu morza i z powrotem.", "training_type": "cardio", "difficulty_level": "hard", "max_participants": 6, "location": {"gym_name": "Plaża Sopot", "gym_address": "ul. Bitwy pod Płowcami 1", "city": "Gdańsk"}, "schedule": {"date": "2026-06-20", "start_time": "07:00", "end_time": "09:00"}, "creator_id": tomek},
+        # 21 czerwca
+        {"title": "Siłownia — ramiona i barki", "description": "Dzień na barki i ramiona. OHP, lateral raise, face pull, uginania różne chwyty.", "training_type": "strength", "difficulty_level": "medium", "max_participants": 4, "location": {"gym_name": "BodyFit Gdańsk", "gym_address": "ul. Grunwaldzka 100", "city": "Gdańsk"}, "schedule": {"date": "2026-06-21", "start_time": "17:00", "end_time": "18:30"}, "creator_id": michal},
+        # 23 czerwca
+        {"title": "Tabata — spalanie kalorii", "description": "8 rund tabaty: 20 sek pracy, 10 sek odpoczynku. Gwarantowane spalanie kalorii!", "training_type": "cardio", "difficulty_level": "medium", "max_participants": 8, "location": {"gym_name": "FitZone Łódź", "gym_address": "ul. Piotrkowska 200", "city": "Łódź"}, "schedule": {"date": "2026-06-23", "start_time": "18:00", "end_time": "19:00"}, "creator_id": radek},
+        # 24 czerwca
+        {"title": "Power yoga — siła i balans", "description": "Intensywna joga łącząca elementy siłowe z pracą nad równowagą. Poziom średniozaawansowany.", "training_type": "yoga", "difficulty_level": "medium", "max_participants": 7, "location": {"gym_name": "Studio Forma", "gym_address": "ul. Długa 8", "city": "Poznań"}, "schedule": {"date": "2026-06-24", "start_time": "09:00", "end_time": "10:30"}, "creator_id": karol},
+        # 24 czerwca — Warszawa
+        {"title": "Trening z kettlebell", "description": "Praca z kettlebell: swings, clean & press, turkish get-up. Przyjdź z rękawiczkami.", "training_type": "strength", "difficulty_level": "medium", "max_participants": 5, "location": {"gym_name": "Gym One", "gym_address": "ul. Nowy Świat 15", "city": "Warszawa"}, "schedule": {"date": "2026-06-24", "start_time": "19:00", "end_time": "20:00"}, "creator_id": bartek},
+        # 26 czerwca
+        {"title": "Bieganie — fartlek w parku", "description": "Fartlek 45 minut w parku. Naprzemienne przyspieszenia i trucht. Dla każdego poziomu.", "training_type": "cardio", "difficulty_level": "easy", "max_participants": 10, "location": {"gym_name": "Park Sołacki", "gym_address": "ul. Sołacka 1", "city": "Poznań"}, "schedule": {"date": "2026-06-26", "start_time": "07:30", "end_time": "08:30"}, "creator_id": ewa},
+        # 27 czerwca
+        {"title": "Siłownia — nogi ciężkie", "description": "Ciężki dzień na nogi: przysiad z pauzą, RDL, hack squat, leg curl. Nie dla słabeuszy!", "training_type": "strength", "difficulty_level": "hard", "max_participants": 3, "location": {"gym_name": "FitZone Łódź", "gym_address": "ul. Piotrkowska 200", "city": "Łódź"}, "schedule": {"date": "2026-06-27", "start_time": "16:00", "end_time": "17:30"}, "creator_id": lukasz},
+        # 27 czerwca — Gdańsk
+        {"title": "CrossFit — Girls WODs", "description": "Legendarny benchmark Fran: 21-15-9 thrusters i podciągnięcia. Mierzymy czas.", "training_type": "crossfit", "difficulty_level": "hard", "max_participants": 6, "location": {"gym_name": "CrossBox Gdańsk", "gym_address": "ul. Wrzeszcz 5", "city": "Gdańsk"}, "schedule": {"date": "2026-06-27", "start_time": "09:00", "end_time": "10:30"}, "creator_id": magda},
+        # 28 czerwca
+        {"title": "Trening cardio — rower i elipsa", "description": "45 min rower + 30 min elipsa. Tempo tlenowe, rozmowa możliwa. Luz i dobre nawodnienie.", "training_type": "cardio", "difficulty_level": "easy", "max_participants": 6, "location": {"gym_name": "Fitness World Wrocław", "gym_address": "ul. Legnicka 55", "city": "Wrocław"}, "schedule": {"date": "2026-06-28", "start_time": "10:00", "end_time": "11:30"}, "creator_id": robert},
+        # 29 czerwca
+        {"title": "Siłownia — Push/Pull split", "description": "Połączony trening push i pull w jednej sesji. Oszczędzamy czas, maksimum efektów.", "training_type": "strength", "difficulty_level": "medium", "max_participants": 4, "location": {"gym_name": "Fitness Platinium", "gym_address": "ul. Marszałkowska 10", "city": "Warszawa"}, "schedule": {"date": "2026-06-29", "start_time": "17:30", "end_time": "19:00"}, "creator_id": jakub},
+        # 30 czerwca
+        {"title": "Joga końca miesiąca — reset", "description": "Ostatni dzień czerwca — czas na regenerację. Joga restoratywna i oddech. Zapraszamy wszystkich!", "training_type": "yoga", "difficulty_level": "easy", "max_participants": 12, "location": {"gym_name": "Yoga Studio Zen", "gym_address": "ul. Floriańska 5", "city": "Kraków"}, "schedule": {"date": "2026-06-30", "start_time": "18:00", "end_time": "19:00"}, "creator_id": kasia},
+        # 30 czerwca — Warszawa
+        {"title": "CrossFit — zamknięcie miesiąca", "description": "Ostatni crossfit czerwca. Zrobimy coś specjalnego — niespodzianka dla uczestników!", "training_type": "crossfit", "difficulty_level": "medium", "max_participants": 8, "location": {"gym_name": "CrossFit Mokotów", "gym_address": "ul. Puławska 90", "city": "Warszawa"}, "schedule": {"date": "2026-06-30", "start_time": "10:00", "end_time": "11:30"}, "creator_id": bartek},
     ]
 
     for t in trainings_data:
         tid = str(uuid.uuid4())
-        trainings_db.append({
-            "id": tid,
-            **t,
-            "created_at": datetime.now().isoformat(),
-        })
-        # Dodaj twórcę jako uczestnika
+        trainings_db.append({"id": tid, **t, "created_at": datetime.now().isoformat()})
         participations_db.append({"user_id": t["creator_id"], "training_id": tid})
 
-    # Dodaj kilka komentarzy
-    if trainings_db and user_ids:
+    # ── Dodaj kilku uczestników do wybranych treningów ──
+    def join(uid, tidx):
+        tid = trainings_db[tidx]["id"]
+        if not any(p for p in participations_db if p["user_id"]==uid and p["training_id"]==tid):
+            participations_db.append({"user_id": uid, "training_id": tid})
+
+    join(marta, 0); join(bartek, 0); join(anna, 2)
+    join(jakub, 1); join(kasia, 1); join(ewa, 1)
+    join(ola, 2);   join(robert, 2)
+    join(tomek, 3); join(michal, 3)
+    join(anna, 4);  join(kasia, 10); join(radek, 10)
+    join(lukasz, 5); join(magda, 5); join(michal, 5)
+    join(piotr, 11); join(robert, 11)
+    join(jakub, 16); join(marta, 16); join(bartek, 16)
+    join(anna, 18);  join(kasia, 18); join(ewa, 18)
+
+    # ── Komentarze ──
+    comments = [
+        (0, anna,   "Super, dołączam! Czy używamy sztangi olimpijskiej?"),
+        (0, bartek, "Jakub, jakie mniej więcej ciężary na wyciskaniu?"),
+        (0, jakub,  "Zależy od poziomu — dla mnie ~100kg, dla początkujących ~60kg. Dogadamy na miejscu 💪"),
+        (1, jakub,  "Nigdy nie próbowałem jogi, myślę że czas najwyższy!"),
+        (1, kasia,  "Świetny wybór, joga to game changer dla regeneracji po siłowni"),
+        (2, marta,  "Crossfit mnie przeraża ale spróbuję 😅"),
+        (2, ola,    "Nie bój się, na początku wszyscy się boją. Po jednym treningu wciągasz się totalnie!"),
+        (5, lukasz, "Bieganie po plaży brzmi genialnie, dołączam!"),
+        (5, radek,  "Ile km planujecie łącznie?"),
+        (5, tomek,  "Około 6-8 km zależy od tempa grupy, zobaczymy na miejscu"),
+        (16, anna,  "Full body to mój ulubiony styl treningów!"),
+        (18, jakub, "Yin yoga? Słyszałem że to najcięższa joga psychicznie 😂"),
+        (18, anna,  "I masz rację! Leżysz spokojnie ale umysł szaleje haha"),
+    ]
+    for tidx, uid, content in comments:
         comments_db.append({
             "id": str(uuid.uuid4()),
-            "training_id": trainings_db[0]["id"],
-            "content": "Super trening, chętnie dołączę!",
-            "author_id": user_ids[1],
-            "created_at": datetime.now().isoformat(),
-        })
-        comments_db.append({
-            "id": str(uuid.uuid4()),
-            "training_id": trainings_db[0]["id"],
-            "content": "Jaki mniej więcej ciężar używamy przy wyciskaniu?",
-            "author_id": user_ids[2],
+            "training_id": trainings_db[tidx]["id"],
+            "content": content,
+            "author_id": uid,
             "created_at": datetime.now().isoformat(),
         })
 
