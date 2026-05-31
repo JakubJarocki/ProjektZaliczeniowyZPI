@@ -57,16 +57,16 @@
                 ${typeBadge(t.training_type)} ${diffBadge(t.difficulty_level)}
                 ${isCreator ? '<span class="badge" style="background:rgba(0,200,150,0.15);color:var(--primary);">Twój trening</span>' : ''}
               </div>
-              <h2 style="font-size:1.7rem;margin-bottom:0.4rem;">${escHtml(t.title)}</h2>
+              <h2 style="font-size:1.7rem;margin-bottom:0.4rem;color:#ffffff;">${escHtml(t.title)}</h2>
               <p style="color:var(--text-muted);font-size:0.9rem;">Utworzono ${fmtDateTime(t.created_at)}</p>
-              ${t.description ? `<p style="color:var(--text-muted);margin-top:0.75rem;line-height:1.7;">${escHtml(t.description)}</p>` : ''}
+              ${t.description ? `<p style="color:#c9d1d9;margin-top:0.75rem;line-height:1.7;">${escHtml(t.description)}</p>` : ''}
             </div>
           </div>
 
           <!-- KOMENTARZE -->
           <div class="card">
             <div class="card-body">
-              <h5 style="margin-bottom:1.25rem;">💬 Komentarze</h5>
+              <h5 style="margin-bottom:1.25rem;color:#ffffff;">💬 Komentarze</h5>
               <div id="comments-list" style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.25rem;"></div>
               ${currentUser ? `
                 <div style="display:flex;gap:0.75rem;">
@@ -88,13 +88,13 @@
             <div class="card-body" style="display:flex;flex-direction:column;gap:0.85rem;">
               <div>
                 <div style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Data i godzina</div>
-                <div style="font-weight:600;">${fmtDate(t.schedule.date)} · ${fmtTime(t.schedule.start_time)}${t.schedule.end_time ? ' – '+fmtTime(t.schedule.end_time) : ''}</div>
+                <div style="font-weight:600;color:#ffffff;">${fmtDate(t.schedule.date)} · ${fmtTime(t.schedule.start_time)}${t.schedule.end_time ? ' – '+fmtTime(t.schedule.end_time) : ''}</div>
               </div>
               <div>
                 <div style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Lokalizacja</div>
-                <div style="font-weight:600;">${escHtml(t.location.gym_name)}</div>
-                ${t.location.gym_address ? `<div style="font-size:0.87rem;color:var(--text-muted);">${escHtml(t.location.gym_address)}</div>` : ''}
-                <div style="font-size:0.87rem;color:var(--text-muted);">📍 ${escHtml(t.location.city)}</div>
+                <div style="font-weight:600;color:#ffffff;">${escHtml(t.location.gym_name)}</div>
+                ${t.location.gym_address ? `<div style="font-size:0.87rem;color:#8b949e;">${escHtml(t.location.gym_address)}</div>` : ''}
+                <div style="font-size:0.87rem;color:#8b949e;">📍 ${escHtml(t.location.city)}</div>
               </div>
               <div>
                 <div style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">Uczestnicy (${t.current_participants}/${t.max_participants})</div>
@@ -106,8 +106,8 @@
                 <div style="display:flex;align-items:center;gap:0.6rem;">
                   ${avatar(t.creator)}
                   <div>
-                    <div style="font-weight:600;font-size:0.92rem;">${escHtml(t.creator.first_name+' '+t.creator.last_name)}</div>
-                    <div style="font-size:0.8rem;color:var(--text-muted);">${LEVEL_LABELS[t.creator.experience_level]||''}</div>
+                    <div style="font-weight:600;font-size:0.92rem;color:#ffffff;">${escHtml(t.creator.first_name+' '+t.creator.last_name)}</div>
+                    <div style="font-size:0.8rem;color:#8b949e;">${LEVEL_LABELS[t.creator.experience_level]||''}</div>
                   </div>
                 </div>
               </div>
